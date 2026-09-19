@@ -112,7 +112,34 @@ Examples include:
 
 The purpose of these simulations was not exploitation of external systems, but validation of logging, detection, alerting, and investigation workflows.
 
----
+## Custom Detection Matrix
+
+The lab includes 11 custom Wazuh rules designed to detect activity across endpoint, authentication, network, account-management, malware, persistence, and file-integrity telemetry.
+
+| Rule ID | Detection | Level | Primary Telemetry | MITRE ATT&CK Mapping |
+|---|---|---:|---|---|
+| 100100 | Important Windows file modified | 12 | Wazuh FIM / Syscheck | Supporting telemetry — no direct technique assigned |
+| 100101 | `whoami.exe` execution | 5 | Sysmon Process Creation | T1033 — System Owner/User Discovery |
+| 100102 | PowerShell lab command execution | 7 | Sysmon / PowerShell process telemetry | T1059.001 — PowerShell |
+| 100103 | Network connection originating from Kali Linux | 7 | Windows Filtering Platform | Supporting network telemetry |
+| 100104 | Repeated Kali network connections / possible scan | 10 | Correlated network events | T1046 — Network Service Discovery |
+| 100105 | Repeated failed authentication attempts | 12 | Windows Security authentication events | T1110 — Brute Force |
+| 100106 | New Windows user account created | 10 | Windows Security Event 4720 | T1136.001 — Create Account: Local Account |
+| 100107 | User added to local Administrators group | 12 | Windows Security Event 4732 | T1098 — Account Manipulation |
+| 100108 | Microsoft Defender malware/PUP detection | 14 | Microsoft Defender | Supporting malware-detection telemetry |
+| 100109 | Encoded PowerShell execution | 14 | Sysmon command-line telemetry | T1059.001 — PowerShell |
+| 100110 | Windows scheduled task created | 12 | Windows Security telemetry | T1053.005 — Scheduled Task |
+
+### Detection Engineering Approach
+
+The rules use several detection strategies rather than relying on simple single-event matching:
+
+- **Signature/field matching:** Detecting specific processes, command-line arguments, event IDs, file paths, and source addresses.
+- **Behavioral correlation:** Rules 100104 and 100105 aggregate repeated activity within defined time windows to identify scanning and possible brute-force behavior.
+- **High-value event monitoring:** Account creation, administrator-group changes, Defender detections, scheduled-task creation, and protected-file modifications are elevated for analyst review.
+- **Context-aware detection:** Known lab infrastructure, including the Kali attack-simulation host, is incorporated into detection logic to distinguish controlled adversary activity.
+
+MITRE ATT&CK mappings are applied only where the observed behavior directly supports a technique. Generic security telemetry such as a Defender alert, file modification, or individual network connection is retained as supporting telemetry rather than being assigned an unsupported ATT&CK technique.
 
 ## Threat Hunting & Investigation
 
