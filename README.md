@@ -133,7 +133,113 @@ Rather than relying only on alert names, I examined underlying event fields such
 
 This allowed activity to be traced from the original simulated action through endpoint or network telemetry and into the corresponding Wazuh alert.
 
+## Detection & Investigation Evidence
+
+The following examples demonstrate the end-to-end detection workflow used throughout the lab. Security activity was generated in the isolated environment, collected through endpoint or network telemetry, analyzed by Wazuh, and investigated through the Threat Hunting interface.
+
+### Custom Detection Overview
+
+Multiple custom detection rules were validated against activity generated in the lab. The Wazuh Threat Hunting dashboard shows alerts from several custom rules firing against the Windows 11 endpoint.
+
+![Custom Wazuh Detection Overview](screenshots/detection-overview.png)
+
+This view demonstrates multiple detection scenarios operating within the same monitoring environment, including network activity, authentication failures, encoded PowerShell, and scheduled-task creation.
+
 ---
+
+### Encoded PowerShell Detection — Rule 100109
+
+An encoded PowerShell command was executed on the Windows 11 endpoint to simulate suspicious or obfuscated command execution.
+
+Sysmon captured the process execution and command-line telemetry. The event was forwarded to Wazuh, where custom **Rule 100109** detected the use of encoded PowerShell and generated a **Level 14** alert.
+
+![Encoded PowerShell Investigation](screenshots/encoded-powershell-investigation.png)
+
+During investigation, the underlying event data was examined rather than relying only on the alert description. The command-line field exposed the PowerShell execution parameters, including the encoded-command behavior that triggered the detection.
+
+**Detection flow:**
+
+`PowerShell Execution → Sysmon Process Telemetry → Wazuh Agent → Rule 100109 → Level 14 Alert → Threat Hunting Investigation`
+
+---
+
+### Scheduled Task Persistence Detection — Rule 100110
+
+A Windows scheduled task named `CyberLab-Persistence-Test` was created to simulate a persistence technique.
+
+Wazuh detected the scheduled-task activity through custom **Rule 100110**, generating a **Level 12** alert.
+
+![Scheduled Task Persistence Detection](screenshots/scheduled-task-persistence.png)
+
+The event was investigated through Wazuh to verify that the scheduled-task activity matched the controlled persistence simulation performed in the lab.
+
+**Detection flow:**
+
+`Scheduled Task Creation → Windows Telemetry → Wazuh → Rule 100110 → Level 12 Alert`
+
+---
+
+### Kali-to-Windows Network Detection
+
+Kali Linux (`192.168.139.129`) was used as the attack-simulation system while Windows 11 (`192.168.139.128`) served as the monitored endpoint.
+
+Controlled network reconnaissance and connection activity was generated from Kali and detected through the lab's network-monitoring and endpoint-telemetry pipeline.
+
+![Kali Network Detection](screenshots/kali-network-detection.png)
+
+Investigation of the event data provided visibility into source and destination addresses, ports, and connection information. This allowed activity originating from the attack VM to be correlated with alerts generated against the Windows endpoint.
+
+---
+
+### Brute-Force Authentication Detection — Rule 100105
+
+Repeated Windows authentication failures were generated to test correlation-based detection.
+
+Instead of treating a single failed login as a brute-force attack, custom **Rule 100105** correlates repeated authentication failures and generates a **Level 12** possible brute-force alert when the configured conditions are met.
+
+![Brute Force Detection](screenshots/brute-force-detection.png)
+
+The underlying Windows authentication telemetry was examined during investigation, providing additional information about the failed logon attempts and authentication behavior.
+
+This test demonstrates the difference between detecting an individual event and correlating multiple related events into a higher-confidence security alert.
+
+---
+
+### File Integrity Monitoring — Rule 100100
+
+Wazuh File Integrity Monitoring was configured to monitor security-sensitive files under:
+
+`C:\SecurityLab`
+
+A monitored file, `important.txt`, was modified to validate real-time integrity monitoring.
+
+![File Integrity Monitoring](screenshots/fim-file-modification.png)
+
+Wazuh recorded the modification in real time and identified changes to file metadata and cryptographic hashes, including **MD5, SHA-1, and SHA-256** values.
+
+The investigation also confirmed that Wazuh's change-reporting functionality captured information about the modification. Custom **Rule 100100** was used to elevate modifications to the monitored file to a **Level 12** alert.
+
+**Detection flow:**
+
+`File Modified → Wazuh FIM → Integrity/Hash Comparison → Rule 100100 → Level 12 Alert → Investigation`
+
+---
+
+### What These Investigations Demonstrate
+
+Together, these tests demonstrate several different detection strategies rather than relying on a single type of alert:
+
+- Process and command-line analysis
+- Suspicious PowerShell detection
+- Persistence detection
+- Network activity monitoring
+- Authentication-event correlation
+- File integrity monitoring
+- Custom SIEM rule development
+- Alert triage and investigation
+- Endpoint and network telemetry analysis
+
+The goal of the lab was not simply to generate alerts, but to understand the telemetry behind each detection and validate that the alert could be traced back to the activity that caused it.
 
 ## Example Detection Chain
 
