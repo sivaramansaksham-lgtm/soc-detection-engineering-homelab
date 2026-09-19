@@ -9,11 +9,26 @@ The lab uses **Wazuh** for centralized security monitoring and detection, **Sysm
 
 Throughout the project, I configured the environment, integrated multiple telemetry sources, developed and tested custom Wazuh detection rules, simulated adversary activity, and investigated the resulting alerts using Wazuh Threat Hunting.
 
+## Project Highlights
+
+- Developed and validated **11 custom Wazuh detection rules** covering endpoint, network, authentication, account-management, persistence, malware, and file-integrity activity.
+- Integrated **Sysmon, Windows Security logs, Microsoft Defender, Wazuh FIM, and Suricata** into a centralized monitoring environment.
+- Simulated adversary activity from Kali Linux and the Windows endpoint to validate detections for reconnaissance, brute-force behavior, encoded PowerShell, scheduled-task persistence, and other security events.
+- Performed alert triage and threat hunting by analyzing process, command-line, authentication, network, and file-integrity telemetry.
+- Mapped applicable detections to **MITRE ATT&CK** and documented an end-to-end SOC investigation of encoded PowerShell execution.
+
+### Repository Resources
+
+- [Custom Wazuh Detection Rules](rules/wazuh/local_rules.xml)
+- [SOC Investigation Case Study](docs/incident-investigation.md)
+- [Detection & Investigation Evidence](#detection--investigation-evidence)
+- [Custom Detection Matrix](#custom-detection-matrix)
+
 ---
 
 ## Architecture
 
-![SOC Home Lab Architecture](soc-homelab-architecture.png)
+![SOC Home Lab Architecture](SOC%20home%20lab%20architecture.png)
 
 ### Lab Environment
 
@@ -41,28 +56,6 @@ The lab operates on an isolated VMware network (`192.168.139.0/24`). Kali Linux 
 - Windows Event Logging
 - Microsoft Defender
 - File Integrity Monitoring
-
----
-
-## Detection Engineering
-
-I developed and tested 11 custom Wazuh detection rules to identify endpoint and network security activity.
-
-| Rule ID | Detection | Severity |
-|---|---|---:|
-| 100100 | Important Windows file modification | 12 |
-| 100101 | `whoami.exe` execution / discovery activity | 5 |
-| 100102 | PowerShell lab test activity | 7 |
-| 100103 | Kali-originated network connection | 7 |
-| 100104 | Possible network scan from Kali Linux | 10 |
-| 100105 | Repeated failed logons / possible brute-force activity | 12 |
-| 100106 | New Windows user account created | 10 |
-| 100107 | User added to local Administrators group | 12 |
-| 100108 | Microsoft Defender malware or PUP detection | 14 |
-| 100109 | Encoded PowerShell / possible obfuscated execution | 14 |
-| 100110 | Scheduled task creation / possible persistence | 12 |
-
-These detections use telemetry from Sysmon, Windows Security events, Microsoft Defender, File Integrity Monitoring, and network activity.
 
 ---
 
@@ -187,7 +180,7 @@ During investigation, the underlying event data was examined rather than relying
 **Detection flow:**
 
 `PowerShell Execution → Sysmon Process Telemetry → Wazuh Agent → Rule 100109 → Level 14 Alert → Threat Hunting Investigation`
-
+**Full investigation:** [Encoded PowerShell SOC Investigation Case Study](docs/incident-investigation.md)
 ---
 
 ### Scheduled Task Persistence Detection — Rule 100110
@@ -268,17 +261,6 @@ Together, these tests demonstrate several different detection strategies rather 
 
 The goal of the lab was not simply to generate alerts, but to understand the telemetry behind each detection and validate that the alert could be traced back to the activity that caused it.
 
-## Example Detection Chain
-
-One test involved executing an encoded PowerShell command on the Windows endpoint.
-
-The activity produced Sysmon process-creation telemetry containing the PowerShell command line. The event was forwarded to Wazuh, where a custom rule identified the `-EncodedCommand` behavior and generated a high-severity alert.
-
-This demonstrated the complete detection pipeline:
-
-`Attack Simulation → Endpoint Telemetry → Wazuh Agent → Wazuh Manager → Custom Detection → Threat Hunting Investigation`
-
----
 
 ## Skills Demonstrated
 
@@ -303,9 +285,11 @@ This demonstrated the complete detection pipeline:
 
 ## Project Status
 
-The core lab implementation and detection testing are complete.
+**Complete — Core Lab & Portfolio Documentation**
 
-Current work focuses on documenting investigations, mapping detections to MITRE ATT&CK, and developing portfolio-quality incident analysis.
+The lab implementation, telemetry integration, custom detection engineering, attack simulation, detection validation, threat hunting, and investigation documentation are complete.
+
+The repository includes 11 custom Wazuh detection rules, MITRE ATT&CK mappings, investigation evidence, and an analyst-style case study documenting the investigation of an encoded PowerShell alert.
 
 ---
 
